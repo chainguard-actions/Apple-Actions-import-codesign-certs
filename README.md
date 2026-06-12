@@ -10,6 +10,7 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 |---------|-----|-----------------|
 | v5.0.2 | [`v5.0.2`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v5.0.2) | [`65cfbc3`](https://github.com/Apple-Actions/import-codesign-certs/commit/65cfbc37e1464d733524cb555b724878f278b8c3) |
 | v6.0.0 | [`v6.0.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v6.0.0) | [`b610f78`](https://github.com/Apple-Actions/import-codesign-certs/commit/b610f78488812c1e56b20e6df63ec42d833f2d14) |
+| v7.0.0 | [`v7.0.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v7.0.0) | [`5142e02`](https://github.com/Apple-Actions/import-codesign-certs/commit/5142e029c445c10ffc7149d172e540235a065466) |
 
 ## Privacy
 
