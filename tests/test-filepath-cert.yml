@@ -1,0 +1,47 @@
+name: Test import-codesign-certs with p12-filepath
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate self-signed certificate and P12 file
+        run: |
+          # Generate a self-signed certificate and private key
+          openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem \
+            -days 1 -nodes -subj "/CN=TestFilepath/O=Test/C=US"
+          # Export to PKCS12 format with a known password
+          openssl pkcs12 -export -out /tmp/test-cert.p12 -inkey key.pem -in cert.pem \
+            -passout pass:filepassword456
+
+      - id: action
+        uses: .
+        with:
+          keychain: filepath_test_keychain
+          create-keychain: 'true'
+          p12-filepath: '/tmp/test-cert.p12'
+          p12-password: 'filepassword456'
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected keychain-password output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"

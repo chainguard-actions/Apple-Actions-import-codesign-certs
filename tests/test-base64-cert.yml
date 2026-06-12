@@ -1,0 +1,52 @@
+name: Test import-codesign-certs with base64 P12
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate self-signed certificate and P12
+        id: gen-cert
+        run: |
+          # Generate a self-signed certificate and private key
+          openssl req -x509 -newkey rsa:2048 -keyout key.pem -out cert.pem \
+            -days 1 -nodes -subj "/CN=Test/O=Test/C=US"
+          # Export to PKCS12 format with a known password
+          openssl pkcs12 -export -out cert.p12 -inkey key.pem -in cert.pem \
+            -passout pass:testpassword123
+          # Base64 encode the P12
+          P12_BASE64=$(base64 -i cert.p12)
+          echo "p12_base64=$P12_BASE64" >> $GITHUB_OUTPUT
+
+      - id: action
+        uses: .
+        with:
+          keychain: test_keychain
+          create-keychain: 'true'
+          keychain-password: 'mykeychain-secret-password'
+          p12-file-base64: ${{ steps.gen-cert.outputs.p12_base64 }}
+          p12-password: 'testpassword123'
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected keychain-password output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
