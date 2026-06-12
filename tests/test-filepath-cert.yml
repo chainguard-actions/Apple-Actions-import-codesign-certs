@@ -1,0 +1,56 @@
+name: Test import codesign certs with p12 filepath
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate test PKCS12 certificate file
+        run: |
+          # Generate a self-signed certificate and export as PKCS12
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US" 2>/dev/null
+          openssl pkcs12 -export -out /tmp/test-codesign.p12 \
+            -inkey /tmp/test-key.pem \
+            -in /tmp/test-cert.pem \
+            -passout pass:filepassword456 2>/dev/null
+          echo "PKCS12 file created at /tmp/test-codesign.p12"
+          ls -la /tmp/test-codesign.p12
+
+      - id: action
+        uses: .
+        with:
+          keychain: 'signing_temp'
+          create-keychain: 'true'
+          p12-filepath: '/tmp/test-codesign.p12'
+          p12-password: 'filepassword456'
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: keychain-password output should not be empty (should be auto-generated)"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: security-response output should not be empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain signing_temp.keychain-db 2>/dev/null || true

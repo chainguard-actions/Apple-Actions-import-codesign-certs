@@ -1,0 +1,58 @@
+name: Test import codesign certs with base64 p12
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate test PKCS12 certificate
+        id: gen-cert
+        run: |
+          # Generate a self-signed certificate and export as PKCS12
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US" 2>/dev/null
+          openssl pkcs12 -export -out /tmp/test.p12 \
+            -inkey /tmp/test-key.pem \
+            -in /tmp/test-cert.pem \
+            -passout pass:testpassword123 2>/dev/null
+          P12_BASE64=$(base64 -i /tmp/test.p12)
+          echo "p12-base64=$P12_BASE64" >> "$GITHUB_OUTPUT"
+
+      - id: action
+        uses: .
+        with:
+          keychain: test-signing-keychain
+          create-keychain: 'true'
+          keychain-password: 'my-keychain-password-123'
+          p12-file-base64: ${{ steps.gen-cert.outputs.p12-base64 }}
+          p12-password: 'testpassword123'
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: keychain-password output should not be empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: security-response output should not be empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Cleanup keychain
+        if: always()
+        run: |
+          security delete-keychain test-signing-keychain.keychain-db 2>/dev/null || true
