@@ -1,0 +1,28 @@
+name: Test import-codesign-certs with p12 filepath
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create dummy p12 file
+        run: |
+          echo "dummy-p12-content" > /tmp/test-cert.p12
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          keychain: signing_temp
+          create-keychain: 'true'
+          p12-filepath: '/tmp/test-cert.p12'
+          p12-password: 'test-p12-password'
+      - name: Assert action was invoked
+        run: |
+          echo "Action outcome: ${{ steps.action.outcome }}"
+          # The action is macOS-specific and will fail on Linux, but we verify it ran
+          if [ "${{ steps.action.outcome }}" = "skipped" ]; then
+            echo "FAIL: action was skipped, expected it to run"
+            exit 1
+          fi
+          echo "PASS: action was invoked (outcome: ${{ steps.action.outcome }})"

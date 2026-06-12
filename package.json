@@ -1,0 +1,46 @@
+{
+  "name": "import-codesign-certs",
+  "version": "5.0.0",
+  "private": true,
+  "description": "GitHub Action for Importing Code-signing Certificates into a Keychain",
+  "main": "lib/main.js",
+  "engines": {
+    "node": "20"
+  },
+  "scripts": {
+    "build": "tsc --outDir lib",
+    "format": "prettier --write src/",
+    "format-check": "prettier --check src/",
+    "knip": "knip",
+    "lint": "eslint",
+    "package": "ncc build --license licenses.txt",
+    "all": "yarn format && yarn knip && yarn lint && yarn build && yarn package"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Apple-Actions/import-codesign-certs.git"
+  },
+  "keywords": [
+    "actions",
+    "node",
+    "setup"
+  ],
+  "author": "Itty Bitty Apps Pty Ltd",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "~1.11.0",
+    "@actions/exec": "~1.1.0",
+    "tmp": "~0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "~20.17.57",
+    "@types/tmp": "~0.2.0",
+    "@vercel/ncc": "~0.38.0",
+    "eslint": "~9.28.0",
+    "eslint-plugin-github": "~6.0.0",
+    "knip": "~5.59.1",
+    "prettier": "~3.5.0",
+    "typescript": "~5.8.3"
+  },
+  "packageManager": "yarn@4.9.1"
+}
