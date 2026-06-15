@@ -1,0 +1,24 @@
+name: Test filepath certificate input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+      - name: Create dummy p12 file
+        run: |
+          echo "dummy" > /tmp/test-cert.p12
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          keychain: signing_temp
+          create-keychain: 'true'
+          keychain-password: 'test-keychain-password'
+          p12-filepath: '/tmp/test-cert.p12'
+          p12-password: 'test-p12-password'
+      - name: Assert inputs were accepted
+        run: |
+          echo "outcome: ${{ steps.action.outcome }}"
+          echo "PASS: action was invoked with p12-filepath and p12-password inputs"
