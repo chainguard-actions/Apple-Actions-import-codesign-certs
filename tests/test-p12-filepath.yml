@@ -1,0 +1,64 @@
+name: Test p12 file path input
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate test PKCS12 certificate file
+        run: |
+          # Generate a self-signed certificate and private key
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/filepath-key.pem \
+            -out /tmp/filepath-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Filepath Signing/O=Test Org/C=US"
+
+          # Export to PKCS12 format with a known password
+          openssl pkcs12 -export \
+            -in /tmp/filepath-cert.pem \
+            -inkey /tmp/filepath-key.pem \
+            -out /tmp/filepath-cert.p12 \
+            -passout pass:filepath_pass123
+
+          echo "P12 file created at /tmp/filepath-cert.p12"
+          ls -la /tmp/filepath-cert.p12
+
+      - id: action
+        uses: .
+        with:
+          keychain: filepath_keychain
+          create-keychain: 'true'
+          keychain-password: filepath_keychain_pass
+          p12-filepath: /tmp/filepath-cert.p12
+          p12-password: filepath_pass123
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected keychain-password output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert filepath keychain exists
+        run: |
+          if ! security list-keychains | grep -q "filepath_keychain"; then
+            echo "FAIL: expected filepath_keychain keychain to exist"
+            exit 1
+          fi
+          echo "PASS: filepath_keychain keychain found"

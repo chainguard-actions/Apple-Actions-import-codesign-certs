@@ -1,0 +1,62 @@
+name: Test basic certificate import with base64 P12
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate a self-signed P12 certificate for testing
+        run: |
+          # Generate a private key and self-signed certificate
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US"
+          # Export to PKCS12 format with a known password
+          openssl pkcs12 -export \
+            -in /tmp/test-cert.pem \
+            -inkey /tmp/test-key.pem \
+            -out /tmp/test-cert.p12 \
+            -passout pass:testpassword123
+          # Encode as base64 (single line)
+          BASE64_P12=$(base64 -i /tmp/test-cert.p12 | tr -d '\n')
+          echo "P12_BASE64=$BASE64_P12" >> "$GITHUB_ENV"
+
+      - id: import
+        uses: .
+        with:
+          keychain: test_signing_basic
+          create-keychain: 'true'
+          p12-file-base64: ${{ env.P12_BASE64 }}
+          p12-password: testpassword123
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.import.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: keychain-password output should not be empty"
+            exit 1
+          fi
+          echo "PASS: keychain-password is set"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.import.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: security-response output should not be empty"
+            exit 1
+          fi
+          echo "PASS: security-response is set"
+
+      - name: Assert keychain was created
+        run: |
+          if ! security list-keychains | grep -q "test_signing_basic.keychain"; then
+            echo "FAIL: keychain test_signing_basic.keychain not found in list"
+            exit 1
+          fi
+          echo "PASS: keychain is present in list"
