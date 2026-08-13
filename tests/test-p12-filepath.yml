@@ -1,0 +1,62 @@
+name: Test p12 file path import
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate self-signed p12 for testing
+        run: |
+          # Generate a self-signed certificate and export as p12
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US"
+          openssl pkcs12 -export \
+            -inkey /tmp/test-key.pem \
+            -in /tmp/test-cert.pem \
+            -out /tmp/filepath-test.p12 \
+            -passout pass:filepath_pass
+
+      - id: action
+        uses: .
+        with:
+          keychain: filepath_keychain
+          create-keychain: 'true'
+          keychain-password: filepath_keychain_pass
+          p12-filepath: /tmp/filepath-test.p12
+          p12-password: filepath_pass
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected keychain-password output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.action.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS"
+
+      - name: Assert filepath_keychain was created
+        run: |
+          KEYCHAIN_LIST=$(security list-keychains)
+          echo "Keychains: $KEYCHAIN_LIST"
+          if echo "$KEYCHAIN_LIST" | grep -q "filepath_keychain"; then
+            echo "PASS: filepath_keychain found"
+          else
+            echo "FAIL: filepath_keychain not found in list"
+            exit 1
+          fi
