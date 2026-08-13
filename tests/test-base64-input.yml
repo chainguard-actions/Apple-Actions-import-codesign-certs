@@ -1,0 +1,64 @@
+name: Test import with base64-encoded P12
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate test P12 certificate and encode as base64
+        id: gen-cert
+        run: |
+          # Generate a self-signed certificate and export as P12
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US"
+          openssl pkcs12 -export \
+            -in /tmp/test-cert.pem \
+            -inkey /tmp/test-key.pem \
+            -out /tmp/test-cert.p12 \
+            -passout pass:certpass456
+          # Encode as base64 (single line)
+          P12_BASE64=$(base64 /tmp/test-cert.p12 | tr -d '\n')
+          echo "p12_base64=$P12_BASE64" >> "$GITHUB_OUTPUT"
+          echo "P12 base64 generated successfully"
+
+      - id: import-certs
+        uses: .
+        with:
+          keychain: signing_temp
+          create-keychain: 'true'
+          p12-file-base64: ${{ steps.gen-cert.outputs.p12_base64 }}
+          p12-password: certpass456
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.import-certs.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected keychain-password output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: keychain-password is set"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.import-certs.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: security-response is set"
+
+      - name: Assert certificate was imported into keychain
+        run: |
+          # Verify the keychain exists and is accessible
+          if ! security list-keychains | grep -q "signing_temp"; then
+            echo "FAIL: signing_temp keychain not found"
+            exit 1
+          fi
+          echo "PASS: keychain exists with imported certificate"

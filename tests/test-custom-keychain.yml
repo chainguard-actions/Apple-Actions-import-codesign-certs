@@ -1,0 +1,60 @@
+name: Test import with custom keychain name and password
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate test P12 certificate
+        run: |
+          # Generate a self-signed certificate and export as P12
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US"
+          openssl pkcs12 -export \
+            -in /tmp/test-cert.pem \
+            -inkey /tmp/test-key.pem \
+            -out /tmp/test-cert.p12 \
+            -passout pass:myp12pass
+          echo "P12 generated successfully"
+
+      - id: import-certs
+        uses: .
+        with:
+          keychain: my_custom_keychain
+          create-keychain: 'true'
+          keychain-password: mykeychain_secret_pw
+          p12-filepath: /tmp/test-cert.p12
+          p12-password: myp12pass
+
+      - name: Assert keychain-password output matches provided password
+        env:
+          ACTUAL: ${{ steps.import-certs.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ "$ACTUAL" != "mykeychain_secret_pw" ]; then
+            echo "FAIL: expected keychain-password to be 'mykeychain_secret_pw', got '$ACTUAL'"
+            exit 1
+          fi
+          echo "PASS: keychain-password matches provided value"
+
+      - name: Assert custom keychain exists
+        run: |
+          if ! security list-keychains | grep -q "my_custom_keychain"; then
+            echo "FAIL: my_custom_keychain not found in keychain list"
+            exit 1
+          fi
+          echo "PASS: my_custom_keychain exists"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.import-certs.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: security-response is set"

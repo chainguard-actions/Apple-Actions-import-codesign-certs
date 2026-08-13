@@ -1,0 +1,59 @@
+name: Test basic import with p12-filepath
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - name: Generate test P12 certificate
+        run: |
+          # Generate a self-signed certificate and export as P12
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Test Code Signing/O=Test Org/C=US"
+          openssl pkcs12 -export \
+            -in /tmp/test-cert.pem \
+            -inkey /tmp/test-key.pem \
+            -out /tmp/test-cert.p12 \
+            -passout pass:testpassword123
+          echo "P12 generated successfully"
+
+      - id: import-certs
+        uses: .
+        with:
+          keychain: signing_temp
+          create-keychain: 'true'
+          p12-filepath: /tmp/test-cert.p12
+          p12-password: testpassword123
+
+      - name: Assert keychain-password output is set
+        env:
+          ACTUAL: ${{ steps.import-certs.outputs.keychain-password }}
+        run: |
+          echo "actual keychain-password: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected keychain-password output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: keychain-password is set"
+
+      - name: Assert security-response output is set
+        env:
+          ACTUAL: ${{ steps.import-certs.outputs.security-response }}
+        run: |
+          echo "actual security-response: $ACTUAL"
+          if [ -z "$ACTUAL" ]; then
+            echo "FAIL: expected security-response output to be non-empty"
+            exit 1
+          fi
+          echo "PASS: security-response is set"
+
+      - name: Assert keychain exists
+        run: |
+          if ! security list-keychains | grep -q "signing_temp"; then
+            echo "FAIL: signing_temp keychain not found in keychain list"
+            exit 1
+          fi
+          echo "PASS: signing_temp keychain exists"
