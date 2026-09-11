@@ -28,7 +28,6 @@ outputs:
   security-response:
     description: 'The output of the security commands.'
 runs:
-  pre: chainguard-phonehome.js
   using: 'node24'
   main: 'dist/index.js'
   post: 'dist/index.js'
