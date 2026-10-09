@@ -1,0 +1,49 @@
+{
+  "name": "import-codesign-certs",
+  "version": "7.1.0",
+  "description": "GitHub Action for Importing Code-signing Certificates into a Keychain",
+  "main": "src/main.ts",
+  "engines": {
+    "node": "24"
+  },
+  "scripts": {
+    "build": "esbuild src/main.ts --bundle --platform=node --target=node24 --format=esm --outfile=dist/index.js --banner:js=\"import{createRequire}from'node:module';const require=createRequire(import.meta.url);\"",
+    "format": "prettier --write src/",
+    "format:check": "prettier --check src/",
+    "knip": "knip",
+    "lint": "eslint",
+    "test": "vitest run",
+    "type:check": "tsc --noEmit",
+    "all": "yarn format && yarn knip && yarn lint && yarn type:check && yarn test && yarn build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Apple-Actions/import-codesign-certs.git"
+  },
+  "keywords": [
+    "actions",
+    "apple",
+    "certificate",
+    "import"
+  ],
+  "author": "Itty Bitty Apps Pty Ltd",
+  "license": "MIT",
+  "dependencies": {
+    "@actions/core": "~3.0.0",
+    "@actions/exec": "~3.0.0",
+    "tmp": "~0.2.0"
+  },
+  "devDependencies": {
+    "@types/node": "~26.1.2",
+    "@types/tmp": "~0.2.0",
+    "esbuild": "~0.28.2",
+    "eslint": "~10.9.1",
+    "eslint-plugin-github": "~6.1.2",
+    "knip": "~6.38.0",
+    "prettier": "~3.9.6",
+    "typescript": "~7.0.2",
+    "vite": "~8.3.3",
+    "vitest": "~5.0.2"
+  },
+  "packageManager": "yarn@4.17.1"
+}

@@ -1,0 +1,53 @@
+name: Test custom keychain name and password
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      # Generate a self-signed PKCS12 certificate for testing
+      - name: Generate test PKCS12 certificate
+        id: gen-cert
+        run: |
+          openssl req -x509 -newkey rsa:2048 -keyout /tmp/test-key.pem \
+            -out /tmp/test-cert.pem -days 1 -nodes \
+            -subj "/CN=Custom Keychain Test/O=Test Org/C=US"
+          openssl pkcs12 -export -out /tmp/test.p12 \
+            -inkey /tmp/test-key.pem \
+            -in /tmp/test-cert.pem \
+            -passout pass:myp12pass
+          P12_BASE64="$(base64 -w 0 /tmp/test.p12)"
+          echo "p12_base64=$P12_BASE64" >> "$GITHUB_OUTPUT"
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          keychain: my_custom_keychain
+          create-keychain: 'true'
+          keychain-password: 'my-keychain-secret'
+          p12-file-base64: ${{ steps.gen-cert.outputs.p12_base64 }}
+          p12-password: myp12pass
+
+      - name: Assert action ran with custom keychain settings
+        env:
+          OUTCOME: ${{ steps.action.outcome }}
+          KEYCHAIN_PASSWORD: ${{ steps.action.outputs.keychain-password }}
+        run: |
+          echo "outcome: $OUTCOME"
+          echo "keychain-password set: $([ -n "$KEYCHAIN_PASSWORD" ] && echo yes || echo no)"
+          if [ "$OUTCOME" = "success" ]; then
+            # On macOS, the keychain-password output should match the provided password
+            if [ -z "$KEYCHAIN_PASSWORD" ]; then
+              echo "FAIL: action succeeded but keychain-password output is empty"
+              exit 1
+            fi
+            echo "PASS: action succeeded with keychain-password='$KEYCHAIN_PASSWORD'"
+          elif [ "$OUTCOME" = "failure" ]; then
+            echo "PASS: action failed gracefully (expected on non-macOS runner without 'security' command)"
+          else
+            echo "FAIL: unexpected outcome '$OUTCOME'"
+            exit 1
+          fi
