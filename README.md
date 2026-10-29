@@ -6,13 +6,13 @@ Hardened by [Chainguard](https://www.chainguard.dev) from the upstream action at
 
 ## Versions
 
-| Version | Tag | Upstream commit |
-|---------|-----|-----------------|
-| v5.0.2 | [`v5.0.2`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v5.0.2) | [`65cfbc3`](https://github.com/Apple-Actions/import-codesign-certs/commit/65cfbc37e1464d733524cb555b724878f278b8c3) |
-| v6.0.0 | [`v6.0.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v6.0.0) | [`b610f78`](https://github.com/Apple-Actions/import-codesign-certs/commit/b610f78488812c1e56b20e6df63ec42d833f2d14) |
-| v6.1.0 | [`v6.1.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v6.1.0) | [`fe74d46`](https://github.com/Apple-Actions/import-codesign-certs/commit/fe74d46e82474f87e1ba79832ad28a4013d0e33a) |
-| v7.0.0 | [`v7.0.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v7.0.0) | [`5142e02`](https://github.com/Apple-Actions/import-codesign-certs/commit/5142e029c445c10ffc7149d172e540235a065466) |
-| v7.1.0 | [`v7.1.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v7.1.0) | [`77ba2a2`](https://github.com/Apple-Actions/import-codesign-certs/commit/77ba2a2a8f5cfc8c405ebf3159f767c323e238f9) |
+| Version | Tag | Upstream commit | Hardening report |
+|---------|-----|-----------------|------------------|
+| v5.0.2 | [`v5.0.2`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v5.0.2) | [`65cfbc3`](https://github.com/Apple-Actions/import-codesign-certs/commit/65cfbc37e1464d733524cb555b724878f278b8c3) | [`HARDENING.md`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/blob/v5.0.2/HARDENING.md) |
+| v6.0.0 | [`v6.0.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v6.0.0) | [`b610f78`](https://github.com/Apple-Actions/import-codesign-certs/commit/b610f78488812c1e56b20e6df63ec42d833f2d14) | [`HARDENING.md`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/blob/v6.0.0/HARDENING.md) |
+| v6.1.0 | [`v6.1.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v6.1.0) | [`fe74d46`](https://github.com/Apple-Actions/import-codesign-certs/commit/fe74d46e82474f87e1ba79832ad28a4013d0e33a) | [`HARDENING.md`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/blob/v6.1.0/HARDENING.md) |
+| v7.0.0 | [`v7.0.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v7.0.0) | [`5142e02`](https://github.com/Apple-Actions/import-codesign-certs/commit/5142e029c445c10ffc7149d172e540235a065466) | [`HARDENING.md`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/blob/v7.0.0/HARDENING.md) |
+| v7.1.0 | [`v7.1.0`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/tree/v7.1.0) | [`77ba2a2`](https://github.com/Apple-Actions/import-codesign-certs/commit/77ba2a2a8f5cfc8c405ebf3159f767c323e238f9) | [`HARDENING.md`](https://github.com/chainguard-actions/Apple-Actions-import-codesign-certs/blob/v7.1.0/HARDENING.md) |
 
 ## Privacy
 
