@@ -4,8 +4,13 @@
   "version": "v7.2.0",
   "commit_sha": "288b8ec97b82c66b6f2a6baaf7acc8dfbcbe331c",
   "url": "https://github.com/Apple-Actions/import-codesign-certs",
-  "policy_sha": "d636be7e43ef829af6e853da6b3c7566db9f72fe",
+  "policy_sha": "374911c4be584df24e6da57af2d990570ef0f859",
   "test_policy_sha": "843adf9e4b8f85d0c08b27b9d0b09dd094b54702",
   "test_agent_version": "2",
-  "harden_agent_version": "2"
+  "harden_agent_version": "2",
+  "dist_artifact": {
+    "gcs_uri": "gs://patch-actions-node-artifacts/dist-artifacts/Apple-Actions/import-codesign-certs/v7.2.0/sha256-a33217c185d32c1131fcdd0b9d5bdf876c1bcda42b5e75db68c11124d1d65753.tar.gz",
+    "sha256": "a33217c185d32c1131fcdd0b9d5bdf876c1bcda42b5e75db68c11124d1d65753",
+    "size_bytes": 190304
+  }
 }
